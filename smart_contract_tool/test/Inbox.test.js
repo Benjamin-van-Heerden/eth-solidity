@@ -36,6 +36,3 @@ beforeEach(async () => {
 describe("Inbox", () => {
 	it("deploys a contract", () => {});
 });
-
-//git undo add
-//git reset HEAD^

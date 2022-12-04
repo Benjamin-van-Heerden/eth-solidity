@@ -1,10 +1,18 @@
 import assert from "assert";
 import ganache from "ganache";
 import { ethers } from "ethers";
-import { abi, bytecode } from "../compile.js";
+import { inboxAbi, inboxBytecode } from "../compile.js";
 
 // create ethers client with ganache provider
-const ethProvider = new ethers.providers.Web3Provider(ganache.provider());
+const ethProvider = new ethers.providers.Web3Provider(
+	ganache.provider({
+		logging: {
+			logger: {
+				log: () => {}, // don't do anything
+			},
+		},
+	})
+);
 
 let accounts_and_balances;
 let contract_owner;
@@ -25,9 +33,8 @@ beforeEach(async () => {
 	const signer = ethProvider.getSigner(contract_owner);
 
 	// deploy the contract
-	const factory = new ethers.ContractFactory(abi, bytecode, signer);
+	const factory = new ethers.ContractFactory(inboxAbi, inboxBytecode, signer);
 	inboxContract = await factory.deploy("Hello, World!");
-
 });
 
 describe("Inbox", () => {

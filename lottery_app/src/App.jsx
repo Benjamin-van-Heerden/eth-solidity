@@ -56,7 +56,6 @@ function App() {
 			const currentPlayers = await lotteryContract.getPlayers();
 			setCurrentPlayers(currentPlayers);
 			const contractBalance = await provider.getBalance(lotteryContractDetails.address);
-			console.log("test");
 			setContractBalance(parseInt(contractBalance._hex, 16) * 0.000000000000000001);
 		};
 		getContractDetails();
@@ -65,6 +64,26 @@ function App() {
 	window.ethereum.on("accountsChanged", (accounts) => {
 		setAccount(accounts[0]);
 	});
+
+	const pickWinner = async () => {
+		// check if the current account is the manager
+		if (account.toLowerCase() !== manager.toLowerCase()) {
+			toast.error("Only the manager can pick a winner.");
+			return;
+		}
+		try {
+			const tx = await lotteryContract.pickWinner();
+			await tx.wait();
+			toast.success("The winner has been picked!");
+			setCurrentPlayers(await lotteryContract.getPlayers());
+			const contractBalance = await provider.getBalance(lotteryContractDetails.address);
+			setContractBalance(parseInt(contractBalance._hex, 16) * 0.000000000000000001);
+		} catch (error) {
+			toast.error(
+				"There was an error picking a winner. Please check your wallet and try again."
+			);
+		}
+	};
 
 	return (
 		<div className="App p-8 bg-slate-300 h-screen w-screen">
@@ -84,16 +103,10 @@ function App() {
 			</div>
 			<div className="flex flex-col w-3/5 p-4">
 				<p>
-					The Lottery has a balance of <b>{contractBalance} ETH</b>
+					The Lottery has a balance of{" "}
+					<b>{Math.round(contractBalance * 100000) / 100000} ETH</b> with a total of{" "}
+					<b>{currentPlayers.length}</b> entrants.
 				</p>
-				{currentPlayers.length > 0 && (
-					<ul className="bg-slate-600 rounded-md text-white p-2 self-center">
-						<p className="font-semibold text-md">Current Entrants:</p>
-						{currentPlayers.map((player) => (
-							<li key={player}>- {player}</li>
-						))}
-					</ul>
-				)}
 			</div>
 			<form action="submit" onSubmit={enterLottery}>
 				<div className="flex flex-col space-y-2 mb-2 w-3/5 border-black border-4 p-4 rounded-md">
@@ -128,6 +141,15 @@ function App() {
 					</div>
 				</div>
 			</form>
+			<div className="flex flex-col p-4 w-3/5 space-y-2 bg-red-400 border-black border-4 rounded-md">
+				<h2 className="text-3xl">Manager Panel</h2>
+				<button
+					className="bg-slate-800 w-32 p-2 mr-4 text-white rounded-md"
+					onClick={pickWinner}
+				>
+					Pick Winner
+				</button>
+			</div>
 			<Toaster />
 		</div>
 	);
